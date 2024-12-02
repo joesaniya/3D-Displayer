@@ -1,32 +1,107 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_3d_controller/flutter_3d_controller.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_cube/flutter_cube.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 class Display3DControllerProvider extends ChangeNotifier {
+  late Object earth;
   final Flutter3DController controller = Flutter3DController();
   bool isModelLoaded = false;
   String? chosenAnimation;
   String? chosenTexture;
+  late WebViewController _webViewController;
 
   Display3DControllerProvider() {
-    _initializePlatform();
+    earth = Object(fileName: "assets/3d_models/cat.obj");
+    // _initializePlatform();
+    initializeWebViewController();
     controller.onModelLoaded.addListener(() {
       isModelLoaded = controller.onModelLoaded.value;
       notifyListeners();
     });
   }
+
+  void initializeObjects() {
+    earth = Object(fileName: "assets/earth/earth_ball.obj");
+
+    notifyListeners();
+  }
+
+  // Add or update your 3D objects if necessary
+  void addObjectToScene(Scene scene, Object object) {
+    scene.world.add(object);
+    scene.camera.zoom = 10;
+    notifyListeners();
+  }
+
   void _initializePlatform() {
     if (WebViewPlatform.instance == null) {
       if (defaultTargetPlatform == TargetPlatform.android) {
-        // WebViewPlatform.instance = AndroidWebView();
+        // WebViewPlatform.instance = SurfaceAndroidWebView();
       } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-        // WebViewPlatform.instance = WebKitWebView();
+        // WebViewPlatform.instance = WKWebView();
       }
     }
+  }
+
+  Future<void> initializeWebViewController() async {
+    late final PlatformWebViewControllerCreationParams params;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      params = WebKitWebViewControllerCreationParams(
+        allowsInlineMediaPlayback: true,
+        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+      );
+    } else {
+      params = const PlatformWebViewControllerCreationParams();
+    }
+
+    _webViewController = WebViewController.fromPlatformCreationParams(params);
+
+    // Set up the WebViewController
+    _webViewController
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            debugPrint('WebView is loading (progress : $progress%)');
+          },
+          onPageStarted: (String url) {
+            debugPrint('Page started loading: $url');
+          },
+          onPageFinished: (String url) {
+            debugPrint('Page finished loading: $url');
+          },
+          onWebResourceError: (WebResourceError error) {
+            debugPrint('''Page resource error:
+  code: ${error.errorCode}
+  description: ${error.description}
+  errorType: ${error.errorType}
+  isForMainFrame: ${error.isForMainFrame}
+            ''');
+          },
+          onNavigationRequest: (NavigationRequest request) {
+            if (request.url.startsWith('https://www.youtube.com/')) {
+              debugPrint('Blocking navigation to ${request.url}');
+              return NavigationDecision.prevent;
+            }
+            debugPrint('Allowing navigation to ${request.url}');
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..addJavaScriptChannel(
+        'Toaster',
+        onMessageReceived: (JavaScriptMessage message) {
+          /*  ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message.message)),
+          );*/
+        },
+      )
+      ..loadRequest(Uri.parse('https://flutter.dev'));
   }
 
   Future<void> playAnimation([String? animationName]) async {

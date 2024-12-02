@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_3d_controller/flutter_3d_controller.dart';
+import 'package:flutter_cube/flutter_cube.dart';
 import 'package:provider/provider.dart';
 import 'package:sample_3d_model/controller/display_3DControllerProvider.dart';
 import 'package:sample_3d_model/view/home-screen.dart';
@@ -29,6 +30,13 @@ class Display3dscreen extends StatelessWidget {
       floatingActionButton: FloatingActionButtons(provider: provider),
       body: Column(
         children: [
+          SizedBox(
+            height: 15,
+          ),
+          Text(
+            'HEART 3D',
+            style: TextStyle(color: Colors.indigo, fontWeight: FontWeight.w900),
+          ),
           Flexible(
             flex: 1,
             child: Flutter3DViewer.obj(
@@ -48,7 +56,20 @@ class Display3dscreen extends StatelessWidget {
               },
             ),
           ),
+          Text(
+            'CAT 3D',
+            style: TextStyle(color: Colors.indigo, fontWeight: FontWeight.w900),
+          ),
           Flexible(
+            flex: 1,
+            child: Cube(
+              onSceneCreated: (Scene scene) {
+                provider.addObjectToScene(scene, provider.earth);
+              },
+            ),
+          ),
+
+          /*  Flexible(
             flex: 1,
             child: Flutter3DViewer(
               activeGestureInterceptor: true,
@@ -66,6 +87,7 @@ class Display3dscreen extends StatelessWidget {
               },
             ),
           ),
+      */
         ],
       ),
     );
