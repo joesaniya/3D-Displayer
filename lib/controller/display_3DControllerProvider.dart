@@ -30,7 +30,6 @@ class Display3DControllerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Add or update your 3D objects if necessary
   void addObjectToScene(Scene scene, Object object) {
     scene.world.add(object);
     scene.camera.zoom = 10;
@@ -60,7 +59,6 @@ class Display3DControllerProvider extends ChangeNotifier {
 
     _webViewController = WebViewController.fromPlatformCreationParams(params);
 
-    // Set up the WebViewController
     _webViewController
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -146,5 +144,20 @@ class Display3DControllerProvider extends ChangeNotifier {
     if (isModelLoaded) {
       controller.setTexture(textureName: textureName);
     }
+  }
+
+  //
+  final List<String> modelPaths = [
+    'assets/3d_models/heart.obj',
+    'assets/3d_models/flutter_dash.obj',
+    'assets/3d_models/cat.obj',
+  ];
+  String? _selectedModelPath;
+
+  String? get selectedModelPath => _selectedModelPath;
+
+  void selectModel(String modelPath) {
+    _selectedModelPath = modelPath;
+    notifyListeners();
   }
 }
